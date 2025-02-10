@@ -1,0 +1,186 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Badge Maker</title><style type="text/css">
+body{
+    margin: 0 0;
+    line-height:1.6;
+    font-size:18px;
+    color:#eee;
+    background-color:#111;
+    padding: 0 10px;
+}
+
+input, output {
+    color:#eee;
+    background-color:#111;
+    font-family: monospace;
+}
+
+#output {
+    display: block;
+    white-space: pre;
+    font-family: monospace;
+}
+
+#output-wrapper {
+    margin-top: 2em;
+}
+</style></head>
+<body>
+<div>
+    <div>
+        <div>
+            <label> Text </label>
+            <input id="input-left" placeholder="build"></input>
+            <input id="input-right" placeholder="failed forever"></input>
+        </div>
+        <div>
+            <label> Text Xs </label>
+            <input type="number" id="left-text-x" name="left-text-x" min="0" max="9999" />
+            <input type="number" id="right-text-x" name="right-text-x" min="0" max="9999" />
+        </div>
+        <div>
+            <label> Text Lengths </label>
+            <input type="number" id="left-text-length" name="left-text-length" min="1" max="9999" />
+            <input type="number" id="right-text-length" name="right-text-length" min="1" max="9999" />
+        </div>
+        <div>
+            <label> Widths </label>
+            <input type="number" id="left-width" name="left-width" min="1" max="9999" />
+            <input type="number" id="right-width" name="right-width" min="1" max="9999" />
+        </div>
+        <div>
+            <label> Fill </label>
+            <input type="color" id="fill" name="fill" />
+        </div>
+    </div>
+    <div id="output-wrapper">
+        <div id="preview"></div>
+        <button id="output-copy-button">📋</button>
+        <output id="output"></output>
+    </div>
+</div>
+
+</body>
+
+<script type="text/javascript">
+
+const inputLeft = document.getElementById("input-left");
+const inputRight = document.getElementById("input-right");
+const leftTextXInput = document.getElementById("left-text-x");
+const rightTextXInput = document.getElementById("right-text-x");
+const leftTextLengthInput = document.getElementById("left-text-length");
+const rightTextLengthInput = document.getElementById("right-text-length");
+const leftWidthInput = document.getElementById("left-width");
+const rightWidthInput = document.getElementById("right-width");
+const fillInput = document.getElementById("fill");
+const preview = document.getElementById("preview");
+const output = document.getElementById("output");
+
+if (!inputLeft.value) {
+    inputLeft.value = "build";
+}
+if (!inputRight.value) {
+    inputRight.value = "failed forever";
+}
+
+leftTextXInput.value = 315;
+rightTextXInput.value = 1225;
+leftWidthInput.value = 61;
+rightWidthInput.value = 125;
+leftTextLengthInput.value = 500;
+rightTextLengthInput.value = 1200;
+
+fillInput.value = "#30b06e";
+
+const update = () => {
+    const left = inputLeft.value;
+    const right = inputRight.value;
+
+    const leftTextX = leftTextXInput.value;
+    const rightTextX = rightTextXInput.value;
+
+    const leftTextLength = leftTextLengthInput.value;
+    const rightTextLength = rightTextLengthInput.value;
+
+    const leftWidth = leftWidthInput.value;
+    const rightWidth = rightWidthInput.value;
+    const totalWidth = parseInt(leftWidth, 10) + parseInt(rightWidth, 10);
+    
+    const fill = (fillInput.value);
+
+    const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="186" height="20" role="img" aria-label="${left}: ${right}">
+      <title>${left}: ${right}</title>
+      <linearGradient id="s" x2="0" y2="100%">
+        <stop offset="0" stop-color="#bbb" stop-opacity=".1" />
+        <stop offset="1" stop-opacity=".1" />
+      </linearGradient>
+      <clipPath id="r">
+        <rect width="${totalWidth}" height="20" rx="3" fill="#fff" />
+      </clipPath>
+      <g clip-path="url(#r)">
+        <rect width="${leftWidth}" height="20" fill="#222" />
+        <rect x="${leftWidth}" width="${rightWidth}" height="20" fill="${fill}" />
+        <rect width="${totalWidth}" height="20" fill="url(#s)" />
+      </g>
+      <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="110">
+        <text aria-hidden="true" x="${leftTextX}" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="${leftTextLength}">${left}</text>
+        <text x="${leftTextX}" y="140" transform="scale(.1)" fill="#fff" textLength="${leftTextLength}">${left}</text>
+        <text aria-hidden="true" x="${rightTextX}" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="${rightTextLength}">${right}</text>
+        <text x="${rightTextX}" y="140" transform="scale(.1)" fill="#fff" textLength="${rightTextLength}">${right}</text>
+      </g>
+    </svg>
+    `;
+
+    preview.innerHTML = svg;
+
+    output.value = svg;
+}
+
+
+inputLeft.oninput = update;
+inputRight.oninput = update;
+leftTextXInput.oninput = update;
+rightTextXInput.oninput = update;
+leftTextLengthInput.oninput = update;
+rightTextLengthInput.oninput = update;
+leftWidthInput.oninput = update;
+rightWidthInput.oninput = update;
+fillInput.oninput = update;
+
+update();
+
+async function writeClipboardText(text) {
+try {
+  await navigator.clipboard.writeText(text);
+} catch (error) {
+  console.error(error.message);
+}
+}
+
+const setupClipboardButton = (id, getTextFn) => {
+    const copyButton = document.getElementById(id);
+    copyButton.addEventListener("click", () => {
+        writeClipboardText(getTextFn()).then(() => {
+          copyButton.disabled = true;
+          copyButton.innerText = "✅";
+          setTimeout(
+            () => {
+              copyButton.innerText = "📋";
+              copyButton.disabled = false;
+            },
+            16 * 30
+          )
+        });
+    });
+}
+
+setupClipboardButton("output-copy-button", () => output.value);
+
+</script>
+
+</html>
