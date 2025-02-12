@@ -96,6 +96,18 @@ rightTextLengthInput.value = 1200;
 
 fillInput.value = "#30b06e";
 
+// A simple *insecure* hash
+// https://gist.github.com/jlevy/c246006675becc446360a798e2b2d781
+const simpleHash = str => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+  }
+  // Convert to 32bit unsigned integer in base 36 and pad with "0" to ensure length is 7.
+  return (hash >>> 0).toString(36).padStart(7, '0');
+};
+
 const update = () => {
     const left = inputLeft.value;
     const right = inputRight.value;
@@ -109,23 +121,27 @@ const update = () => {
     const leftWidth = leftWidthInput.value;
     const rightWidth = rightWidthInput.value;
     const totalWidth = parseInt(leftWidth, 10) + parseInt(rightWidth, 10);
-    
+
     const fill = (fillInput.value);
+
+    // Avoid collisions with other SVGs because apparently there's no
+    // way to use things like clip paths while avoiding IDs. :/
+    const idPrefix = simpleHash(left + right);
 
     const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${totalWidth}" height="20" role="img" aria-label="${left}: ${right}">
       <title>${left}: ${right}</title>
-      <linearGradient id="s" x2="0" y2="100%">
+      <linearGradient id="${idPrefix}-s" x2="0" y2="100%">
         <stop offset="0" stop-color="#bbb" stop-opacity=".1" />
         <stop offset="1" stop-opacity=".1" />
       </linearGradient>
-      <clipPath id="r">
+      <clipPath id="${idPrefix}-r">
         <rect width="${totalWidth}" height="20" rx="3" fill="#fff" />
       </clipPath>
-      <g clip-path="url(#r)">
+      <g clip-path="url(#${idPrefix}-r)">
         <rect width="${leftWidth}" height="20" fill="#222" />
         <rect x="${leftWidth}" width="${rightWidth}" height="20" fill="${fill}" />
-        <rect width="${totalWidth}" height="20" fill="url(#s)" />
+        <rect width="${totalWidth}" height="20" fill="url(#${idPrefix}-s)" />
       </g>
       <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="110">
         <text aria-hidden="true" x="${leftTextX}" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="${leftTextLength}">${left}</text>
